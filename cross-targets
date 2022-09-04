@@ -1,0 +1,6 @@
+#!/bin/bash
+
+export CROSS_TARGETS=(
+    "i686-pc-cygwin"
+    "x86_64-pc-cygwin"
+)

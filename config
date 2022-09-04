@@ -1,0 +1,51 @@
+#!/bin/bash
+
+source version
+source cross-targets
+source tools.sh
+# SOURCE_DIR and OUTPUT_DIR must be full path
+export SOURCE_DIR="$(pwd)/.src-tarballs"
+export OUTPUT_DIR="$(pwd)/output"
+export PATCH_DIR="$(pwd)/patch"
+
+unset EXEC_SUFFIX CROSS_EXEC_SUFFIX
+unset SCRIPT_SUFFIX
+unset BUILD_HOST
+unset MSYS_HOST
+__os_name="$(uname -s)"
+case "$__os_name" in
+    CYGWIN*|MINGW*|MSYS*)
+        export BUILD_HOST=Windows
+        export EXEC_SUFFIX=".exe"
+        export SCRIPT_SUFFIX=".cmd"
+        if [[ $__os_name == "CYGWIN"* ]]; then
+            export CYGWIN=winsymlinks:native
+        else
+            export MSYS=winsymlinks:native
+            if [ -z "$__MSYS" ]; then
+                # Force MinGW64
+                export MSYSTEM=MINGW64
+                export PATH=/mingw64/bin:/mingw64/sbin:$PATH
+                export CONFIGURE_ARGS="$CONFIGURE_ARGS --build=x86_64-w64-mingw32" 
+            else
+                export MSYS_HOST=1
+                export MSYSTEM=MSYS
+                export PATH=/usr/bin:/usr/sbin:/bin:/sbin:$PATH
+            fi
+        fi
+        ;;
+    Linux*)
+        export BUILD_HOST=Linux
+        ;;
+    Darwin*)
+        export BUILD_HOST=Darwin
+        export HOST_CFLAGS="$HOST_CFLAGS -mmacosx-version-min=10.9"
+        export HOST_CXXFLAGS="$HOST_CXXFLAGS -mmacosx-version-min=10.9 -std=c++11"
+        export HOST_LDFLAGS="$HOST_LDFLAGS -mmacosx-version-min=10.9"
+        ;;
+esac
+unset __os_name
+export CROSS_HOST=${CROSS_HOST:-${BUILD_HOST}}
+if [[ $CROSS_HOST == "Windows" ]]; then
+    CROSS_EXEC_SUFFIX=".exe"
+fi
